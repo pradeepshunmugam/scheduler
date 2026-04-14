@@ -8,7 +8,7 @@ import (
 func DBInsert(name, url string) {
 	connString := `host=localhost port=5432 dbname=url_list user=postgres password=admin sslmode=disable`
 	db, err := sql.Open("postgres", connString)
-	insert := fmt.Sprintf(`INSERT INTO url_list('name', 'url) VALUES('%v','%v')`, name, url)
+	insert := fmt.Sprintf(`INSERT INTO url_list(name, url) VALUES('%v','%v')`, name, url)
 	if err != nil {
 		fmt.Println("Unable to connect to db")
 	} else {
