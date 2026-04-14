@@ -19,9 +19,11 @@ var addCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if url == "" && name == "" {
 			fmt.Println("Please provide url and name. Provided is empty")
-			return
+
+		} else {
+			fmt.Printf("got the url : %v and name %v to monitor.", url, name)
+			DBInsert(name, url)
 		}
-		fmt.Printf("got the url : %v and name %v to monitor.", url, name)
 
 	},
 }
