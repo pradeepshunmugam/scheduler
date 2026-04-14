@@ -19,7 +19,9 @@ var addCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if url == "" && name == "" {
 			fmt.Println("Please provide url and name. Provide is empty")
+			return
 		}
+		fmt.Printf("got the url : %v and name %v to monitor.", url, name)
 
 	},
 }
