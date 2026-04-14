@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"scheduler/cli/cmd/dbconn"
 
 	"github.com/spf13/cobra"
 )
@@ -22,7 +23,7 @@ var addCmd = &cobra.Command{
 
 		} else {
 			fmt.Printf("got the url : %v and name %v to monitor.", url, name)
-			DBInsert(name, url)
+			dbconn.DBInsert(name, url)
 		}
 
 	},
