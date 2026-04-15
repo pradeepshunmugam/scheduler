@@ -14,7 +14,7 @@ func CreateDB() {
 		return
 	}
 	defer defaultDb.Close()
-	db = "url_list"
+	db = "scheduler"
 	var exists bool
 	checkDb := `SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)`
 	err = defaultDb.QueryRow(checkDb, db).Scan(&exists)
@@ -31,19 +31,29 @@ func CreateDB() {
 		createSchema_url_list(db)
 		createSchema_user(db)
 	} else {
-		fmt.Println("DB already exists")
+		fmt.Println("DB already exists. Checking for schemas.")
+		createSchema_url_list(db)
+		createSchema_user(db)
 	}
 
 }
 
 func createSchema_url_list(db string) {
+	var exists bool
+	tableName := "url_list"
 	connString := fmt.Sprintf("host=localhost port=5432 user=postgres password=admin dbname=%v sslmode=disable", db)
 	dbConn, err := sql.Open("postgres", connString)
 	if err != nil {
 		fmt.Printf("Unable to connect to DB %v\n", err)
 	}
 	defer dbConn.Close()
-	_, err = dbConn.Exec(`Create TABLE IF NOT EXISTS url_list (
+	checkUrlList := `SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' and table_name= $1)`
+	err = dbConn.QueryRow(checkUrlList, tableName).Scan(&exists)
+	if err != nil {
+		fmt.Println("Unable to check table.", err)
+	}
+	if !exists {
+		_, err = dbConn.Exec(`Create TABLE IF NOT EXISTS url_list (
 		id SERIAL PRIMARY KEY,
 		url TEXT NOT NULL,
 		name TEXT UNIQUE,
@@ -54,30 +64,44 @@ func createSchema_url_list(db string) {
 		last_run TIMESTAMPTZ,
 		next_run TIMESTAMPTZ );`)
 
-	if err != nil {
-		fmt.Println("Unable to create table.", err)
+		if err != nil {
+			fmt.Println("Unable to create table.", err)
+		} else {
+			fmt.Println("Table created")
+		}
 	} else {
-		fmt.Println("Table created")
+		fmt.Println("Table already exists.")
 	}
 }
 
 func createSchema_user(db string) {
+	var exists bool
+	tableName := "users"
 	connString := fmt.Sprintf("host=localhost port=5432 user=postgres password=admin dbname=%v sslmode=disable", db)
 	dbConn, err := sql.Open("postgres", connString)
 	if err != nil {
 		fmt.Printf("Unable to connect to DB %v\n", err)
 	}
 	defer dbConn.Close()
-	query := `CREATE TABLE IF NOT EXISTS (
+	checkUser := `SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' and table_name= $1)`
+	err = dbConn.QueryRow(checkUser, tableName).Scan(&exists)
+	if err != nil {
+		fmt.Println("Unable to check table.", err)
+	}
+	if !exists {
+		query := `CREATE TABLE IF NOT EXISTS users (
 	id SERIAL,
 	username TEXT PRIMARY KEY,
 	password TEXT NOT NULL,
 	email TEXT NOT NULL)`
-	_, err = dbConn.Exec(query)
-	if err != nil {
-		fmt.Println("Unable to create user table.", err)
+		_, err = dbConn.Exec(query)
+		if err != nil {
+			fmt.Println("Unable to create user table.", err)
+		} else {
+			fmt.Println("User table created")
+		}
 	} else {
-		fmt.Println("User table created")
+		fmt.Println("Table exists.")
 	}
 
 }
