@@ -29,6 +29,7 @@ func CreateDB() {
 		defaultDb.Exec(createQuery + db)
 		fmt.Printf("DB - %v created.\n", db)
 		createSchema_url_list(db)
+		createSchema_user(db)
 	} else {
 		fmt.Println("DB already exists")
 	}
@@ -45,7 +46,7 @@ func createSchema_url_list(db string) {
 	_, err = dbConn.Exec(`Create TABLE IF NOT EXISTS url_list (
 		id SERIAL PRIMARY KEY,
 		url TEXT NOT NULL,
-		name TEXT,
+		name TEXT UNIQUE,
 		cron TEXT NOT NULL DEFAULT '*/5 * * * *',
 		sample int NOT NULL DEFAULT 1,
         email TEXT ,
@@ -58,4 +59,25 @@ func createSchema_url_list(db string) {
 	} else {
 		fmt.Println("Table created")
 	}
+}
+
+func createSchema_user(db string) {
+	connString := fmt.Sprintf("host=localhost port=5432 user=postgres password=admin dbname=%v sslmode=disable", db)
+	dbConn, err := sql.Open("postgres", connString)
+	if err != nil {
+		fmt.Printf("Unable to connect to DB %v\n", err)
+	}
+	defer dbConn.Close()
+	query := `CREATE TABLE IF NOT EXISTS (
+	id SERIAL,
+	username TEXT PRIMARY KEY,
+	password TEXT NOT NULL,
+	email TEXT NOT NULL)`
+	_, err = dbConn.Exec(query)
+	if err != nil {
+		fmt.Println("Unable to create user table.", err)
+	} else {
+		fmt.Println("User table created")
+	}
+
 }
