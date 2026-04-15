@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+//Create DB - scheduler while initializing the tool.
+
 func CreateDB() {
 	var db string
 	connString := `host = localhost port = 5432  dbname = postgres user = postgres password = admin sslmode=disable`
@@ -37,6 +39,8 @@ func CreateDB() {
 	}
 
 }
+
+//Create schema - "url_list" to store url details.
 
 func createSchema_url_list(db string) {
 	var exists bool
@@ -73,6 +77,8 @@ func createSchema_url_list(db string) {
 		fmt.Println("Table already exists.")
 	}
 }
+
+//Create schema - "users" for user credential details
 
 func createSchema_user(db string) {
 	var exists bool

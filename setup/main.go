@@ -10,5 +10,5 @@ import (
 )
 
 func main() {
-	db.CreateDB()
+	db.CreateDB() //call the createDB function from db package to create DB and schema.
 }

@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+//Update the URL and respective details in DB - scheduler.
+
 func DBInsert(name, url string) {
 	connString := `host=localhost port=5432 dbname=scheduler user=postgres password=admin sslmode=disable`
 	db, err := sql.Open("postgres", connString)

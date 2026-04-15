@@ -23,7 +23,7 @@ var addCmd = &cobra.Command{
 
 		} else {
 			fmt.Printf("got the url : %v and name %v to monitor.", url, name)
-			dbconn.DBInsert(name, url)
+			dbconn.DBInsert(name, url) //Once get the url and respective details from user. call the function to uopdate in  DB - scheduler
 		}
 
 	},
