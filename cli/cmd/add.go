@@ -27,10 +27,7 @@ var addCmd = &cobra.Command{
 				sample = "1"
 				email = ""
 			}
-			//fmt.Printf("got the url : %v and name %v to monitor.", url, name)
-			//dbconn.DBInsert(name, url) //Once get the url and respective details from user. call the function to uopdate in  DB - scheduler
 			dbconn.DBInsert(name, url, cron, sample, email)
-			fmt.Println("Data inserted", name, url, cron, sample, email)
 		}
 		if csvFile != "" {
 			fmt.Println("Reading csv file")
@@ -69,8 +66,6 @@ var addCmd = &cobra.Command{
 			}
 
 		}
-		fmt.Println("Please provide url and name. Provided is empty")
-
 	},
 }
 
