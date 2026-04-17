@@ -22,13 +22,21 @@ var addCmd = &cobra.Command{
 	Long:  "To monitor or initialize the URL, add it using 'sch add -flag <> '. Add url in format - 'https://website.com'. ",
 	Run: func(cmd *cobra.Command, args []string) {
 		if url != "" && name != "" {
-			fmt.Printf("got the url : %v and name %v to monitor.", url, name)
-			dbconn.DBInsert(name, url) //Once get the url and respective details from user. call the function to uopdate in  DB - scheduler
+			if cron == "" || sample == "" || email == "" {
+				cron = "*/5 * * * *"
+				sample = "1"
+				email = ""
+			}
+			//fmt.Printf("got the url : %v and name %v to monitor.", url, name)
+			//dbconn.DBInsert(name, url) //Once get the url and respective details from user. call the function to uopdate in  DB - scheduler
+			dbconn.DBInsert(name, url, cron, sample, email)
+			fmt.Println("Data inserted", name, url, cron, sample, email)
 		}
 		if csvFile != "" {
+			fmt.Println("Reading csv file")
 			file, err := os.Open(csvFile)
 			if err != nil {
-				fmt.Println("Unable to read file.")
+				fmt.Println("Unable to read file.", err)
 				return
 			}
 			reader := csv.NewReader(file)
@@ -37,10 +45,28 @@ var addCmd = &cobra.Command{
 				fmt.Println(err)
 			}
 			for i := range records {
-				name, url := records[i][0], records[i][1]
-				dbconn.DBInsert(name, url)
+				name, url, cron, sample, email := records[i][0], records[i][1], records[i][2], records[i][3], records[i][4]
+				for _, row := range records {
+					if len(row) < 2 {
+						fmt.Println("Skipping invalid value..")
+						continue
+					}
+					name := row[0]
+					url := row[1]
+					cron = "*/5 * * * *"
+					sample = "1"
+					email = ""
+					if len(row) > 2 && row[2] != "" {
+						cron = row[2]
+					}
+					if len(row) > 3 && row[2] != "" {
+						sample = row[3]
+					}
+
+					dbconn.DBInsert(name, url, cron, sample, email)
+				}
+				fmt.Println("Data inserted", name, url, cron, sample, email)
 			}
-			fmt.Println("Data inserted")
 
 		}
 		fmt.Println("Please provide url and name. Provided is empty")
