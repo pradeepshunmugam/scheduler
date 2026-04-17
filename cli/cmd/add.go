@@ -21,6 +21,7 @@ var addCmd = &cobra.Command{
 	Short: "add the url",
 	Long:  "To monitor or initialize the URL, add it using 'sch add -flag <> '. Add url in format - 'https://website.com'. ",
 	Run: func(cmd *cobra.Command, args []string) {
+		//Get single line input and validate mandatory field and assign default value
 		if url != "" && name != "" {
 			if cron == "" || sample == "" || email == "" {
 				cron = "*/5 * * * *"
@@ -29,6 +30,7 @@ var addCmd = &cobra.Command{
 			}
 			dbconn.DBInsert(name, url, cron, sample, email)
 		}
+		//Get fields by ready csv to bulk import it and validate mandatory field and assign default value
 		if csvFile != "" {
 			fmt.Println("Reading csv file")
 			file, err := os.Open(csvFile)
@@ -41,28 +43,27 @@ var addCmd = &cobra.Command{
 			if err != nil {
 				fmt.Println(err)
 			}
-			for i := range records {
-				name, url, cron, sample, email := records[i][0], records[i][1], records[i][2], records[i][3], records[i][4]
-				for _, row := range records {
-					if len(row) < 2 {
-						fmt.Println("Skipping invalid value..")
-						continue
-					}
-					name := row[0]
-					url := row[1]
-					cron = "*/5 * * * *"
-					sample = "1"
-					email = ""
-					if len(row) > 2 && row[2] != "" {
-						cron = row[2]
-					}
-					if len(row) > 3 && row[2] != "" {
-						sample = row[3]
-					}
-
-					dbconn.DBInsert(name, url, cron, sample, email)
+			for _, row := range records {
+				var name, url, cron, sample, email string
+				name = row[0]
+				url = row[1]
+				cron = "*/5 * * * *"
+				sample = "1"
+				email = ""
+				if len(row) > 2 && row[2] != "" {
+					cron = row[2]
 				}
-				fmt.Println("Data inserted", name, url, cron, sample, email)
+				if len(row) > 3 && row[3] != "" {
+					sample = row[3]
+				}
+				if len(row) > 4 && row[4] != "" {
+					email = row[4]
+				}
+				if name != "" && url != "" {
+					dbconn.DBInsert(name, url, cron, sample, email) //calling dbpackage to insert the files
+				} else {
+					fmt.Println("Missing Fields.")
+				}
 			}
 
 		}
