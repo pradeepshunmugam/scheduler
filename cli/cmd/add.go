@@ -2,11 +2,12 @@ package cmd
 
 import (
 	"encoding/csv"
-	"fmt"
 	"os"
 	"scheduler/cli/cmd/dbconn"
+	"scheduler/cli/logger"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 var url string
@@ -29,19 +30,21 @@ var addCmd = &cobra.Command{
 				email = ""
 			}
 			dbconn.DBInsert(name, url, cron, sample, email)
+		} else {
+			logger.Log.Warn("Either url or name field is not provided. Provided : ", zap.String("url", url), zap.String("name", name))
 		}
 		//Get fields by ready csv to bulk import it and validate mandatory field and assign default value
 		if csvFile != "" {
-			fmt.Println("Reading csv file")
+			logger.Log.Info("Reading csv file")
 			file, err := os.Open(csvFile)
 			if err != nil {
-				fmt.Println("Unable to read file.", err)
+				logger.Log.Error("Unable to insert", zap.Error(err))
 				return
 			}
 			reader := csv.NewReader(file)
 			records, err := reader.ReadAll()
 			if err != nil {
-				fmt.Println(err)
+				logger.Log.Error("Unable to insert", zap.Error(err))
 			}
 			for _, row := range records {
 				var name, url, cron, sample, email string
@@ -62,7 +65,7 @@ var addCmd = &cobra.Command{
 				if name != "" && url != "" {
 					dbconn.DBInsert(name, url, cron, sample, email) //calling dbpackage to insert the files
 				} else {
-					fmt.Println("Missing Fields.")
+					logger.Log.Warn("Missing Fields.")
 				}
 			}
 

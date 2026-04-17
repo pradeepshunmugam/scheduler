@@ -3,6 +3,9 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"scheduler/cli/logger"
+
+	"go.uber.org/zap"
 )
 
 //Create DB - scheduler while initializing the tool.
@@ -12,7 +15,7 @@ func CreateDB() {
 	connString := `host = localhost port = 5432  dbname = postgres user = postgres password = admin sslmode=disable`
 	defaultDb, err := sql.Open("postgres", connString)
 	if err != nil {
-		fmt.Printf("unable to connect to default db - postgres\n")
+		logger.Log.Error("unable to connect to default db - postgres", zap.Error(err))
 		return
 	}
 	defer defaultDb.Close()
@@ -20,20 +23,20 @@ func CreateDB() {
 	var exists bool
 	checkDb := `SELECT EXISTS(SELECT 1 FROM pg_database WHERE datname = $1)`
 	err = defaultDb.QueryRow(checkDb, db).Scan(&exists)
-	fmt.Println("Checking db exists or not. ", err)
+	logger.Log.Info("Checking db exists or not. ")
 	if err != nil {
-		fmt.Println("unable to check db exist", err)
+		logger.Log.Error("unable to check db exist", zap.Error(err))
 		return
 	}
 	if !exists {
-		fmt.Printf("DB - %v does not exist.\n", db)
+		logger.Log.Info("DB - %v does not exist.\n", zap.String("db", db))
 		createQuery := `Create DATABASE `
 		defaultDb.Exec(createQuery + db)
-		fmt.Printf("DB - %v created.\n", db)
+		logger.Log.Info("DB - %v created.\n", zap.String("db", db))
 		createSchema_url_list(db)
 		createSchema_user(db)
 	} else {
-		fmt.Println("DB already exists. Checking for schemas.")
+		logger.Log.Info("DB already exists. Checking for schemas.")
 		createSchema_url_list(db)
 		createSchema_user(db)
 	}
@@ -48,13 +51,16 @@ func createSchema_url_list(db string) {
 	connString := fmt.Sprintf("host=localhost port=5432 user=postgres password=admin dbname=%v sslmode=disable", db)
 	dbConn, err := sql.Open("postgres", connString)
 	if err != nil {
-		fmt.Printf("Unable to connect to DB %v\n", err)
+		logger.Log.Error("Unable to connect DB", zap.Error(err))
+
 	}
 	defer dbConn.Close()
 	checkUrlList := `SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' and table_name= $1)`
 	err = dbConn.QueryRow(checkUrlList, tableName).Scan(&exists)
 	if err != nil {
-		fmt.Println("Unable to check table.", err)
+		//fmt.Println("Unable to check table.", err)
+		logger.Log.Error("Unable to check table", zap.Error(err))
+
 	}
 	if !exists {
 		_, err = dbConn.Exec(`Create TABLE IF NOT EXISTS url_list (
@@ -69,12 +75,14 @@ func createSchema_url_list(db string) {
 		next_run TIMESTAMPTZ );`)
 
 		if err != nil {
-			fmt.Println("Unable to create table.", err)
+			//fmt.Println("Unable to create table.", err)
+			logger.Log.Error("Unable to create table", zap.Error(err))
+
 		} else {
-			fmt.Println("Table created")
+			logger.Log.Info("Table created")
 		}
 	} else {
-		fmt.Println("Table already exists.")
+		logger.Log.Info("Table already exists.")
 	}
 }
 
@@ -86,13 +94,17 @@ func createSchema_user(db string) {
 	connString := fmt.Sprintf("host=localhost port=5432 user=postgres password=admin dbname=%v sslmode=disable", db)
 	dbConn, err := sql.Open("postgres", connString)
 	if err != nil {
-		fmt.Printf("Unable to connect to DB %v\n", err)
+		//fmt.Printf("Unable to connect to DB %v\n", err)
+		logger.Log.Error("Unable to connect to DB", zap.Error(err))
+
 	}
 	defer dbConn.Close()
 	checkUser := `SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' and table_name= $1)`
 	err = dbConn.QueryRow(checkUser, tableName).Scan(&exists)
 	if err != nil {
-		fmt.Println("Unable to check table.", err)
+		//fmt.Println("Unable to check table.", err)
+		logger.Log.Error("Unable to check table", zap.Error(err))
+
 	}
 	if !exists {
 		query := `CREATE TABLE IF NOT EXISTS users (
@@ -102,12 +114,14 @@ func createSchema_user(db string) {
 	email TEXT NOT NULL)`
 		_, err = dbConn.Exec(query)
 		if err != nil {
-			fmt.Println("Unable to create user table.", err)
+			//fmt.Println("Unable to create user table.", err)
+			logger.Log.Error("Unable to create user table", zap.Error(err))
+
 		} else {
-			fmt.Println("User table created")
+			logger.Log.Info("User table created")
 		}
 	} else {
-		fmt.Println("Table exists.")
+		logger.Log.Info("Table exists.")
 	}
 
 }
