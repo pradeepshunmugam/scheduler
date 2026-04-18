@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"scheduler/cli/logger"
 
 	"go.uber.org/zap"
@@ -12,7 +13,12 @@ import (
 
 func CreateDB() {
 	var db string
-	connString := `host = localhost port = 5432  dbname = postgres user = postgres password = admin sslmode=disable`
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	defaultDbname := os.Getenv("DB_NAME_DEFAULT")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	connString := fmt.Sprintf(`host = %v port = %v  dbname = %v user = %v password = %v sslmode=disable`, host, port, defaultDbname, user, password)
 	defaultDb, err := sql.Open("postgres", connString)
 	if err != nil {
 		logger.Log.Error("unable to connect to default db - postgres", zap.Error(err))
