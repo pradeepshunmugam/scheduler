@@ -4,7 +4,7 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package main
 
 import (
-	"scheduler/cli/logger"
+	"scheduler/logger"
 	"scheduler/setup/db"
 
 	"github.com/joho/godotenv"
@@ -13,8 +13,9 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
 	logger.Init()
+	err := godotenv.Load("../.env")
+
 	if err != nil {
 		//logger.Log.Error("Unable to load env", zap.Error(err))
 		logger.Log.Error("Unable to load env", zap.Error(err))

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"scheduler/cli/logger"
+	"scheduler/logger"
 
 	"go.uber.org/zap"
 )
@@ -52,9 +52,15 @@ func CreateDB() {
 //Create schema - "url_list" to store url details.
 
 func createSchema_url_list(db string) {
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
 	var exists bool
 	tableName := "url_list"
-	connString := fmt.Sprintf("host=localhost port=5432 user=postgres password=admin dbname=%v sslmode=disable", db)
+	connString := fmt.Sprintf(`host = %v port = %v  dbname = %v user = %v password = %v sslmode=disable`, host, port, db, user, password)
+
+	//connString := fmt.Sprintf("host=localhost port=5432 user=postgres password=admin dbname=%v sslmode=disable", db)
 	dbConn, err := sql.Open("postgres", connString)
 	if err != nil {
 		logger.Log.Error("Unable to connect DB", zap.Error(err))
@@ -95,9 +101,15 @@ func createSchema_url_list(db string) {
 //Create schema - "users" for user credential details
 
 func createSchema_user(db string) {
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
 	var exists bool
 	tableName := "users"
-	connString := fmt.Sprintf("host=localhost port=5432 user=postgres password=admin dbname=%v sslmode=disable", db)
+	connString := fmt.Sprintf(`host = %v port = %v  dbname = %v user = %v password = %v sslmode=disable`, host, port, db, user, password)
+
+	//connString := fmt.Sprintf("host=localhost port=5432 user=postgres password=admin dbname=%v sslmode=disable", db)
 	dbConn, err := sql.Open("postgres", connString)
 	if err != nil {
 		//fmt.Printf("Unable to connect to DB %v\n", err)

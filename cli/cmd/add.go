@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"os"
 	"scheduler/cli/cmd/dbconn"
-	"scheduler/cli/logger"
+	"scheduler/logger"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -38,13 +38,13 @@ var addCmd = &cobra.Command{
 			logger.Log.Info("Reading csv file")
 			file, err := os.Open(csvFile)
 			if err != nil {
-				logger.Log.Error("Unable to insert", zap.Error(err))
+				logger.Log.Error("Unable to read", zap.Error(err))
 				return
 			}
 			reader := csv.NewReader(file)
 			records, err := reader.ReadAll()
 			if err != nil {
-				logger.Log.Error("Unable to insert", zap.Error(err))
+				logger.Log.Error("Unable to read", zap.Error(err))
 			}
 			for _, row := range records {
 				var name, url, cron, sample, email string
