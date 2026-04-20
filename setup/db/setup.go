@@ -83,8 +83,8 @@ func createSchema_url_list(db string) {
 		sample TEXT NOT NULL,
         email TEXT ,
 		created_at TIMESTAMPTZ DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
-		last_run TIMESTAMPTZ,
-		next_run TIMESTAMPTZ );`)
+		last_run TIMESTAMPTZ DEFAULT ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC') - INTERVAL '10 years'),
+		next_run TIMESTAMPTZ DEFAULT ((CURRENT_TIMESTAMP AT TIME ZONE 'UTC') - INTERVAL '10 years'));`)
 
 		if err != nil {
 			//fmt.Println("Unable to create table.", err)
