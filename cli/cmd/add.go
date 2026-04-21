@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/csv"
 	"os"
+	"regexp"
 	"scheduler/cli/cmd/dbconn"
 	"scheduler/logger"
 
@@ -23,7 +24,11 @@ var addCmd = &cobra.Command{
 	Long:  "To monitor or initialize the URL, add it using 'sch add -flag <> '. Add url in format - 'https://website.com'. ",
 	Run: func(cmd *cobra.Command, args []string) {
 		//Get single line input and validate mandatory field and assign default value
-		if url != "" && name != "" {
+		matched, err := regexp.MatchString(`^https?://[^\s/$.?#].[^\s]*$`, url)
+		if err != nil {
+			logger.Log.Error("url is not in valid format", zap.Error(err))
+		}
+		if url != "" && name != "" && matched {
 			if cron == "" || sample == "" || email == "" {
 				cron = "*/5 * * * *"
 				sample = "1"
@@ -62,7 +67,11 @@ var addCmd = &cobra.Command{
 				if len(row) > 4 && row[4] != "" {
 					email = row[4]
 				}
-				if name != "" && url != "" {
+				matched, err := regexp.MatchString(`^https?://[^\s/$.?#].[^\s]*$`, url)
+				if err != nil {
+					logger.Log.Error("url is not in valid format", zap.Error(err))
+				}
+				if name != "" && url != "" && matched {
 					dbconn.DBInsert(name, url, cron, sample, email) //calling dbpackage to insert the files
 				} else {
 					logger.Log.Warn("Missing Fields.")

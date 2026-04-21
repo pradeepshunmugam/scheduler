@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"scheduler/logger"
-	"time"
 
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
@@ -51,19 +50,5 @@ func ReadURL() {
 func log(job jobs) {
 	//logger.Log.Info("Read", zap.String("name", job.name), zap.String("url", job.url), zap.String("cron", job.cron), zap.String("email", job.email), zap.String("last_run", job.last_run), zap.String("next_run", job.next_run))
 
-	// if err != nil {
-	// 	fmt.Println("Unable to format last run", err)
-	// }
-	// if last_run_parsed.IsZero() || last_run_parsed.Before(time.Now()) {
-	// 	fmt.Println(job.last_run)
-	// }
-	layout := "2006-01-02T15:04:05.999999-07:00" // Go’s reference time
-	last_run_parsed, err := time.Parse(layout, job.next_run)
-	if err != nil {
-		fmt.Println("Issue in parsing last_run. ", err)
-	}
-	if last_run_parsed.Before(time.Now()) {
-		fmt.Println("less than current time : ", job.last_run)
-	}
-
+	calculateNextRun(job.cron)
 }
