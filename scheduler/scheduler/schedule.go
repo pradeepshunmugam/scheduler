@@ -50,5 +50,5 @@ func ReadURL() {
 func log(job jobs) {
 	//logger.Log.Info("Read", zap.String("name", job.name), zap.String("url", job.url), zap.String("cron", job.cron), zap.String("email", job.email), zap.String("last_run", job.last_run), zap.String("next_run", job.next_run))
 
-	calculateNextRun(job.cron)
+	calculateNextRun(job.cron, job.name)
 }
