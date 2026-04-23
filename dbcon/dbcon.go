@@ -35,10 +35,13 @@ func DBActivity(query string, next time.Time, name string) {
 	}
 	defer db.Close()
 	//update the next run.
-	_, err = db.Exec(query, next, name)
-	if err != nil {
-		logger.Log.Error("Unable to insert. ", zap.Error(err))
+	if next.Before(time.Now()) {
+		_, err = db.Exec(query, next, name)
+		if err != nil {
+			logger.Log.Error("Unable to insert. ", zap.Error(err))
+		}
+		logger.Log.Info("next run updated for job ", zap.String("name :", name), zap.Time("next run : ", next))
+	} else {
+		logger.Log.Info("next run is already aahead of current time.", zap.String("name", name), zap.Time("Time : ", next))
 	}
-	logger.Log.Info("next run updated for job ", zap.String("name :", name), zap.Time("next run : ", next))
-
 }
