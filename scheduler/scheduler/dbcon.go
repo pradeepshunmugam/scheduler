@@ -1,8 +1,9 @@
-package dbcon
+package scheduler
 
 import (
 	"database/sql"
 	"fmt"
+	"net/http"
 	"os"
 	"scheduler/logger"
 	"time"
@@ -44,15 +45,44 @@ func DBActivity(query string, next time.Time, name string) {
 }
 
 // next time.Time, name , url string, sample int
-func CheckNextRun(job jobs) {
+func CheckNextRun(job Jobs, next time.Time) {
 	currrentTime := time.Now()
 	current_minute := currrentTime.Minute()
 	next_run_minute := next.Minute()
 	nextformatted := next.Format("2006-01-02 15:04:05")
-	scheduledJobs := []jobs
+	// scheduledJobs := []jobs
 	if (current_minute - next_run_minute) < 5 {
 		logger.Log.Info("Next run time is less than 5 min.", zap.String("name :", job.name), zap.String("next run : ", nextformatted))
 		// fmt.Println("current minute  ", currrentTime.Minute())
 		// fmt.Println("next run minute ", next.Minute())
+		urlCheck, err := http.Get(job.url)
+		if err != nil {
+			logger.Log.Error("Unable to check url status, ", zap.String("url", job.url), zap.Error(err))
+			return
+		}
+		// var status string
+		// var statusCode int
+		for i := 0; i < job.sample; i++ {
+			//status := urlCheck.Status
+			statusCode := urlCheck.StatusCode
+			var codes []int
+			codes = append(codes, statusCode)
+			var expected bool
+			for j := range codes {
+				if codes[j] == 200 {
+					// fmt.Println("success.", job.url, status, statusCode)
+					expected = true
+
+				} else {
+					expected = false
+				}
+			}
+			if expected == true {
+				fmt.Println("success.", job.url, codes)
+			} else {
+				fmt.Println("Not expected result.", job.url, codes)
+			}
+			//logger.Log.Info("url status :", zap.String("url : ", job.url), zap.String("status : ", status), zap.Int("status code : ", statusCode))
+		}
 	}
 }

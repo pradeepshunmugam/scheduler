@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type jobs struct {
+type Jobs struct {
 	url      string
 	name     string
 	sample   int
@@ -33,11 +33,17 @@ func ReadURL() {
 		logger.Log.Error("Unable to connect to DB to read the urls!!, ", zap.Error(err))
 	}
 	rows, err := dbconn.Query("SELECT name, url, sample, cron, email, last_run, next_run FROM url_list;")
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered from panic")
+		}
+	}()
 	if err != nil {
 		logger.Log.Error("Unableto read the urls!!, ", zap.Error(err))
+		panic(err)
 	}
 	for rows.Next() {
-		var job jobs
+		var job Jobs
 		err := rows.Scan(&job.name, &job.url, &job.sample, &job.cron, &job.email, &job.last_run, &job.next_run)
 		defer rows.Close()
 		if err != nil {
@@ -47,7 +53,7 @@ func ReadURL() {
 	}
 
 }
-func log(job jobs) {
+func log(job Jobs) {
 	//logger.Log.Info("Read", zap.String("name", job.name), zap.String("url", job.url), zap.String("cron", job.cron), zap.String("email", job.email), zap.String("last_run", job.last_run), zap.String("next_run", job.next_run))
 
 	calculateNextRun(job)
