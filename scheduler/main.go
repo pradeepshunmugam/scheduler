@@ -6,7 +6,7 @@ import (
 	"os"
 	"scheduler/logger"
 	"scheduler/scheduler/scheduler"
-	"sync"
+	"time"
 
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
@@ -20,8 +20,6 @@ func main() {
 		logger.Log.Error("Unable to load environment. ", zap.Error(err))
 		return
 	}
-	var wg sync.WaitGroup
-	wg.Add(2)
 	dbhost := os.Getenv("DB_HOST")
 	dbport := os.Getenv("DB_PORT")
 	dbuser := os.Getenv("DB_USER")
@@ -42,8 +40,18 @@ func main() {
 		logger.Log.Error("Unableto read the urls!!, ", zap.Error(err))
 		panic(err)
 	}
-	go scheduler.UpdateNextRun(dbconn, &wg)
-	go scheduler.Run(dbconn, &wg)
-	wg.Wait()
+	// go scheduler.UpdateNextRun(dbconn, &wg)
+	// go scheduler.Run(dbconn, &wg)
+	// wg.Wait()
+
+	//To make the serive run continuously
+
+	for {
+		scheduler.UpdateNextRun(dbconn)
+		scheduler.Run(dbconn)
+		fmt.Println("Waiting for a minute")
+		time.Sleep(60 * time.Second)
+
+	}
 
 }

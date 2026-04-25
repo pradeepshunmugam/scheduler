@@ -24,8 +24,7 @@ type Jobs struct {
 	next_run string
 }
 
-func UpdateNextRun(db *sql.DB, wg *sync.WaitGroup) {
-	defer wg.Done()
+func UpdateNextRun(db *sql.DB) {
 	rows, err := db.Query("SELECT name, url, sample, cron, email, last_run, next_run FROM url_list;")
 	if err != nil {
 		logger.Log.Error("Unable to connect to DB to read the urls!!, ", zap.Error(err))
@@ -57,8 +56,7 @@ func UpdateNextRun(db *sql.DB, wg *sync.WaitGroup) {
 	}
 }
 
-func Run(db *sql.DB, wg *sync.WaitGroup) {
-	defer wg.Done()
+func Run(db *sql.DB) {
 	i := 0
 	var scheduleList []map[string](interface{})
 	query := `SELECT name, url, next_run, sample FROM url_list;`
@@ -92,26 +90,41 @@ func Run(db *sql.DB, wg *sync.WaitGroup) {
 		return
 	}
 	logger.Log.Info("Going to schedule  ", zap.Int("total : ", i), zap.String("schedule list : ", string(data)))
-
-	checkStatus(scheduleList)
+	ch := make(chan string) //channel to receive url status
+	var wg sync.WaitGroup
+	//loop to check the url status cconitnously
+	for i := range scheduleList {
+		wg.Add(1) //waitgroup to close the function
+		url := fmt.Sprint(scheduleList[i]["url"])
+		//goroutine created to concurrently execute
+		go func(u string) {
+			defer wg.Done()
+			checkStatus(u, ch)
+		}(url)
+	}
+	go func() {
+		wg.Wait()
+		close(ch)
+	}()
+	for i := 0; i < len(scheduleList); i++ {
+		logger.Log.Info("url status", zap.String("Result", <-ch)) //receiveing the output through channel
+	}
 
 }
 
-func checkStatus(scheduleList []map[string](interface{})) {
+func checkStatus(url string, ch chan string) {
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("Recovered")
+			logger.Log.Info("Recovered")
 		}
 	}()
-	for i := range scheduleList {
-		url := fmt.Sprint(scheduleList[i]["url"])
-		urlStatus, err := http.Get(url)
-		if err != nil {
-			fmt.Println(err)
-			panic("oops something happened !!! Panic")
-		}
-		fmt.Printf("Url status of %v is %v.\n", url, urlStatus.StatusCode)
-
+	client := http.Client{Timeout: 10 * time.Second}
+	urlStatus, err := client.Get(url)
+	if err != nil {
+		fmt.Println(err)
+		panic("oops something happened !!! Panic")
 	}
+	res := fmt.Sprintf("Url status of %v is %v .", url, urlStatus.StatusCode)
+	ch <- res //sending the output through channel
 
 }
