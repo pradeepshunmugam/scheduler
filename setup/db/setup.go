@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"scheduler/logger"
+	"scheduler/setup/logger"
 
 	"go.uber.org/zap"
 )

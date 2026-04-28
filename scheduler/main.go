@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"scheduler/logger"
+	"scheduler/scheduler/logger"
 	"scheduler/scheduler/scheduler"
 	"time"
 

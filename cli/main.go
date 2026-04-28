@@ -5,7 +5,7 @@ package main
 
 import (
 	"scheduler/cli/cmd"
-	"scheduler/logger"
+	"scheduler/cli/logger"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"

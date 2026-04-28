@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"scheduler/logger"
+	"scheduler/scheduler/logger"
 	"sync"
 	"time"
 
@@ -74,7 +74,7 @@ func Run(db *sql.DB) {
 		currrentTime := time.Now()
 		diff := parsedNextRun.Sub(currrentTime)
 		minutesPart := int(diff.Minutes()) % 60
-		if minutesPart < 5 {
+		if minutesPart < 1 {
 			i++
 			scheduleMap := map[string]interface{}{
 				"name":   job.name,
@@ -121,7 +121,7 @@ func checkStatus(url string, ch chan string) {
 	client := http.Client{Timeout: 10 * time.Second}
 	urlStatus, err := client.Get(url)
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error("http get error", zap.Error(err))
 		panic("oops something happened !!! Panic")
 	}
 	res := fmt.Sprintf("Url status of %v is %v .", url, urlStatus.StatusCode)

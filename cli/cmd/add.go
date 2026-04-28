@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 	"regexp"
 	"scheduler/cli/cmd/dbconn"
-	"scheduler/logger"
+	"scheduler/cli/logger"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -26,7 +27,7 @@ var addCmd = &cobra.Command{
 		//Get single line input and validate mandatory field and assign default value
 		matched, err := regexp.MatchString(`^https?://[^\s/$.?#].[^\s]*$`, url)
 		if err != nil {
-			logger.Log.Error("url is not in valid format", zap.Error(err))
+			fmt.Println("url is not in valid format", err)
 		}
 		if url != "" && name != "" && matched {
 			if cron == "" || sample == "" || email == "" {
@@ -34,9 +35,10 @@ var addCmd = &cobra.Command{
 				sample = "1"
 				email = ""
 			}
-			dbconn.DBInsert(name, url, cron, sample, email)
+			result := dbconn.DBInsert(name, url, cron, sample, email)
+			fmt.Println(result)
 		} else {
-			logger.Log.Warn("Either url or name field is not provided. Provided : ", zap.String("url", url), zap.String("name", name))
+			fmt.Println("Either url or name field is not provided. Provided : ", url, name)
 		}
 		//Get fields by ready csv to bulk import it and validate mandatory field and assign default value
 		if csvFile != "" {
@@ -69,10 +71,11 @@ var addCmd = &cobra.Command{
 				}
 				matched, err := regexp.MatchString(`^https?://[^\s/$.?#].[^\s]*$`, url)
 				if err != nil {
-					logger.Log.Error("url is not in valid format", zap.Error(err))
+					fmt.Println("url is not in valid format")
 				}
 				if name != "" && url != "" && matched {
-					dbconn.DBInsert(name, url, cron, sample, email) //calling dbpackage to insert the files
+					result := dbconn.DBInsert(name, url, cron, sample, email) //calling dbpackage to insert the files
+					fmt.Println(result)
 				} else {
 					logger.Log.Warn("Missing Fields.")
 				}
@@ -82,12 +85,28 @@ var addCmd = &cobra.Command{
 	},
 }
 
+var deletecmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete the url from monitoring",
+	Long:  "Delete the url from monitoring/scheduling which is no longer needed.",
+	Run: func(cmd *cobra.Command, args []string) {
+		if name != "" {
+			fmt.Printf("Got the name - %v.\n", name)
+			result := dbconn.DeleteRow(name)
+			fmt.Println(result)
+		} else {
+			fmt.Println("Provide the url job name.")
+		}
+	},
+}
+
 func init() {
-	rootCmd.AddCommand(addCmd)
+	rootCmd.AddCommand(addCmd, deletecmd)
 	addCmd.Flags().StringVarP(&url, "url", "u", "", "url to monitor")
 	addCmd.Flags().StringVarP(&name, "name", "n", "", "name of the url/job.")
 	addCmd.Flags().StringVarP(&cron, "cron", "c", "", "cron definition to check the url")
 	addCmd.Flags().StringVarP(&sample, "sample", "s", "", "number of samples to check")
 	addCmd.Flags().StringVarP(&email, "email", "m", "", "email id to send notification")
 	addCmd.Flags().StringVarP(&csvFile, "file", "g", "", "csv file to add bulk data.")
+	deletecmd.Flags().StringVarP(&name, "name", "n", "", "name of the url to delete.")
 }

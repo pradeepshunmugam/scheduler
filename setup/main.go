@@ -4,8 +4,8 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package main
 
 import (
-	"scheduler/logger"
 	"scheduler/setup/db"
+	"scheduler/setup/logger"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
