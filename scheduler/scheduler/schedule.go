@@ -99,6 +99,7 @@ func Run() {
 	for i := range scheduleList {
 		wg.Add(1) //waitgroup to close the function
 		url := fmt.Sprint(scheduleList[i]["url"])
+		name := fmt.Sprint(scheduleList[i]["name"])
 		sampleStr := fmt.Sprint(scheduleList[i]["sample"])
 
 		sample, err := strconv.Atoi(sampleStr)
@@ -106,10 +107,10 @@ func Run() {
 			logger.Log.Error("Error in converting sample to integer", zap.Error(err))
 		}
 		//goroutine created to concurrently execute
-		go func(u string, s int) {
+		go func(u string, name string, s int) {
 			defer wg.Done()
-			checkStatus(u, sample, ch)
-		}(url, sample)
+			checkStatus(u, name, sample, ch)
+		}(url, name, sample)
 	}
 	go func() {
 		wg.Wait()
@@ -121,7 +122,8 @@ func Run() {
 
 }
 
-func checkStatus(url string, sample int, ch chan string) {
+func checkStatus(url, name string, sample int, ch chan string) {
+	db := db.GetDB()
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Info("Recovered")
@@ -137,6 +139,11 @@ func checkStatus(url string, sample int, ch chan string) {
 		panic("oops something happened !!! Panic")
 	}
 	res := fmt.Sprintf("Url status of %v is %v .", url, urlStatus.StatusCode)
+	insert := `INSERT INTO urlstatus(name, status,statuscode) VALUES($1, $2, $3)`
+	_, err = db.Exec(insert, name, urlStatus.Status, urlStatus.StatusCode)
+	if err != nil {
+		fmt.Println("unable to insert result in DB.", err)
+	}
 	ch <- res //sending the output through channel
 	//}
 }

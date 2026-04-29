@@ -46,6 +46,6 @@ func Init() {
 	} else {
 		// Default logging to stdout for containerized deployment
 		Log = zap.Must(zap.NewProduction())
-		fmt.Println("Logging to terminal (Container)")
+		//fmt.Println("Logging to terminal (Container)")
 	}
 }

@@ -172,7 +172,7 @@ func createSchema_urlstatus(db string) {
 	if !exists {
 		_, err = dbConn.Exec(`Create TABLE IF NOT EXISTS urlstatus (
 		id SERIAL PRIMARY KEY,
-		name TEXT UNIQUE,
+		name TEXT,
 		status TEXT NOT NULL,
 		statusCode TEXT NULL,
 		event_timestamp TIMESTAMPTZ DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC'),
