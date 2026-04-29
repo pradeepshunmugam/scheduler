@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"scheduler/cli/cmd/dbconn"
+	"scheduler/cli/db"
 	"scheduler/cli/logger"
 
 	"github.com/spf13/cobra"
@@ -35,8 +35,9 @@ var addCmd = &cobra.Command{
 				sample = "1"
 				email = ""
 			}
-			result := dbconn.DBInsert(name, url, cron, sample, email)
-			fmt.Println(result)
+			//result := query.DBInsert(name, url, cron, sample, email)
+			db.DBInsert(name, url, cron, sample, email)
+			//fmt.Println(result)
 		} else {
 			fmt.Println("Either url or name field is not provided. Provided : ", url, name)
 		}
@@ -74,8 +75,9 @@ var addCmd = &cobra.Command{
 					fmt.Println("url is not in valid format")
 				}
 				if name != "" && url != "" && matched {
-					result := dbconn.DBInsert(name, url, cron, sample, email) //calling dbpackage to insert the files
-					fmt.Println(result)
+					//result := db.DBInsert(name, url, cron, sample, email) //calling dbpackage to insert the files
+					db.DBInsert(name, url, cron, sample, email) //calling dbpackage to insert the files
+					// fmt.Println(result)
 				} else {
 					logger.Log.Warn("Missing Fields.")
 				}
@@ -90,10 +92,12 @@ var deletecmd = &cobra.Command{
 	Short: "Delete the url from monitoring",
 	Long:  "Delete the url from monitoring/scheduling which is no longer needed.",
 	Run: func(cmd *cobra.Command, args []string) {
+		//db := db.GetDB()
 		if name != "" {
 			fmt.Printf("Got the name - %v.\n", name)
-			result := dbconn.DeleteRow(name)
-			fmt.Println(result)
+
+			db.DeleteRow(name)
+			//fmt.Println(result)
 		} else {
 			fmt.Println("Provide the url job name.")
 		}

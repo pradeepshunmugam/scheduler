@@ -1,11 +1,12 @@
 package scheduler
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"scheduler/scheduler/db.go"
 	"scheduler/scheduler/logger"
+	"strconv"
 	"sync"
 	"time"
 
@@ -24,7 +25,8 @@ type Jobs struct {
 	next_run string
 }
 
-func UpdateNextRun(db *sql.DB) {
+func UpdateNextRun() {
+	db := db.GetDB()
 	rows, err := db.Query("SELECT name, url, sample, cron, email, last_run, next_run FROM url_list;")
 	if err != nil {
 		logger.Log.Error("Unable to connect to DB to read the urls!!, ", zap.Error(err))
@@ -56,7 +58,8 @@ func UpdateNextRun(db *sql.DB) {
 	}
 }
 
-func Run(db *sql.DB) {
+func Run() {
+	db := db.GetDB()
 	i := 0
 	var scheduleList []map[string](interface{})
 	query := `SELECT name, url, next_run, sample FROM url_list;`
@@ -96,11 +99,17 @@ func Run(db *sql.DB) {
 	for i := range scheduleList {
 		wg.Add(1) //waitgroup to close the function
 		url := fmt.Sprint(scheduleList[i]["url"])
+		sampleStr := fmt.Sprint(scheduleList[i]["sample"])
+
+		sample, err := strconv.Atoi(sampleStr)
+		if err != nil {
+			logger.Log.Error("Error in converting sample to integer", zap.Error(err))
+		}
 		//goroutine created to concurrently execute
-		go func(u string) {
+		go func(u string, s int) {
 			defer wg.Done()
-			checkStatus(u, ch)
-		}(url)
+			checkStatus(u, sample, ch)
+		}(url, sample)
 	}
 	go func() {
 		wg.Wait()
@@ -112,12 +121,15 @@ func Run(db *sql.DB) {
 
 }
 
-func checkStatus(url string, ch chan string) {
+func checkStatus(url string, sample int, ch chan string) {
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Log.Info("Recovered")
 		}
 	}()
+	//fmt.Printf("URL : %v  SAMPLE :  %v\n", url, sample)
+	//for i := 0; i < sample; i++ {
+	// fmt.Printf("sample is %v for url - %v\n ", sample, url)
 	client := http.Client{Timeout: 10 * time.Second}
 	urlStatus, err := client.Get(url)
 	if err != nil {
@@ -126,5 +138,5 @@ func checkStatus(url string, ch chan string) {
 	}
 	res := fmt.Sprintf("Url status of %v is %v .", url, urlStatus.StatusCode)
 	ch <- res //sending the output through channel
-
+	//}
 }

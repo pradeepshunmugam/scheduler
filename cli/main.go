@@ -5,6 +5,7 @@ package main
 
 import (
 	"scheduler/cli/cmd"
+	"scheduler/cli/db"
 	"scheduler/cli/logger"
 
 	"github.com/joho/godotenv"
@@ -18,6 +19,7 @@ func main() {
 	if err != nil {
 		logger.Log.Error("Unable to load env", zap.Error(err))
 	}
-	//logger.Log.Info("Initializing main function.")
 	cmd.Execute()
+	db := db.GetDB()
+	defer db.Close()
 }
