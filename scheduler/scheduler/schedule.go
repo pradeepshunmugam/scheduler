@@ -21,8 +21,8 @@ type Jobs struct {
 	sample   int
 	cron     string
 	email    string
-	last_run string
-	next_run string
+	last_run time.Time
+	next_run time.Time
 }
 
 func UpdateNextRun() {
@@ -48,12 +48,16 @@ func UpdateNextRun() {
 
 		next := schedule.Next(time.Now())
 		currrentTime := time.Now()
-		query := (`UPDATE url_list SET next_run = $1 where name = $2`)
-		_, err = db.Exec(query, next, job.name)
-		if err != nil {
-			logger.Log.Error(`Unable to insert the next_run.`, zap.Error(err))
-		} else {
-			logger.Log.Info("next run is updated. ", zap.Time("current time :", currrentTime), zap.String("url name : ", job.name))
+		diff := next.Sub(currrentTime)
+		minutesPart := int(diff.Minutes()) % 60
+		if minutesPart < 1 {
+			query := (`UPDATE url_list SET next_run = $1 where name = $2`)
+			_, err = db.Exec(query, next, job.name)
+			if err != nil {
+				logger.Log.Error(`Unable to insert the next_run.`, zap.Error(err))
+			} else {
+				logger.Log.Info("next run is updated. ", zap.Time("Next run :", next), zap.String("url name : ", job.name))
+			}
 		}
 	}
 }
@@ -73,11 +77,8 @@ func Run() {
 		if err != nil {
 			fmt.Println(err)
 		}
-		parsedNextRun, err := time.Parse(time.RFC3339, job.next_run)
-		currrentTime := time.Now()
-		diff := parsedNextRun.Sub(currrentTime)
-		minutesPart := int(diff.Minutes()) % 60
-		if minutesPart < 1 {
+
+		if !job.next_run.After(time.Now()) {
 			i++
 			scheduleMap := map[string]interface{}{
 				"name":   job.name,
@@ -129,9 +130,6 @@ func checkStatus(url, name string, sample int, ch chan string) {
 			logger.Log.Info("Recovered")
 		}
 	}()
-	//fmt.Printf("URL : %v  SAMPLE :  %v\n", url, sample)
-	//for i := 0; i < sample; i++ {
-	// fmt.Printf("sample is %v for url - %v\n ", sample, url)
 	client := http.Client{Timeout: 10 * time.Second}
 	urlStatus, err := client.Get(url)
 	if err != nil {
@@ -144,6 +142,10 @@ func checkStatus(url, name string, sample int, ch chan string) {
 	if err != nil {
 		fmt.Println("unable to insert result in DB.", err)
 	}
+	updateLastRun := `UPDATE url_list SET last_run = (SELECT event_timestamp FROM urlstatus WHERE urlstatus.name = url_list.name  ORDER BY event_timestamp DESC LIMIT 1 ) WHERE name IN (SELECT $1 FROM urlstatus);`
+	_, err = db.Exec(updateLastRun, name)
+	if err != nil {
+		fmt.Println("Unable to insert last run", err)
+	}
 	ch <- res //sending the output through channel
-	//}
 }
