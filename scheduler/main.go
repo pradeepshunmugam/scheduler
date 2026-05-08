@@ -13,7 +13,7 @@ func main() {
 	db := db.GetDB()
 	defer db.Close()
 	for {
-		scheduler.UpdateNextRun()
+		//scheduler.UpdateNextRun()
 		scheduler.Run()
 		fmt.Println("Waiting for a minute")
 		time.Sleep(60 * time.Second)

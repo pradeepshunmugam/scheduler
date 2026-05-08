@@ -43,21 +43,14 @@ func UpdateNextRun() {
 		if err != nil {
 			fmt.Println("Unable to parse the time. ", err)
 		}
-
 		//Inser next run in db.
-
 		next := schedule.Next(time.Now())
-		currrentTime := time.Now()
-		diff := next.Sub(currrentTime)
-		minutesPart := int(diff.Minutes()) % 60
-		if minutesPart < 1 {
-			query := (`UPDATE url_list SET next_run = $1 where name = $2`)
-			_, err = db.Exec(query, next, job.name)
-			if err != nil {
-				logger.Log.Error(`Unable to insert the next_run.`, zap.Error(err))
-			} else {
-				logger.Log.Info("next run is updated. ", zap.Time("Next run :", next), zap.String("url name : ", job.name))
-			}
+		query := (`UPDATE url_list SET next_run = $1 where name = $2`)
+		_, err = db.Exec(query, next, job.name)
+		if err != nil {
+			logger.Log.Error(`Unable to insert the next_run.`, zap.Error(err))
+		} else {
+			logger.Log.Info("next run is updated. ", zap.Time("Next run :", next), zap.String("url name : ", job.name))
 		}
 	}
 }
@@ -77,7 +70,6 @@ func Run() {
 		if err != nil {
 			fmt.Println(err)
 		}
-
 		if !job.next_run.After(time.Now()) {
 			i++
 			scheduleMap := map[string]interface{}{
@@ -96,22 +88,25 @@ func Run() {
 	logger.Log.Info("Going to schedule  ", zap.Int("total : ", i), zap.String("schedule list : ", string(data)))
 	ch := make(chan string) //channel to receive url status
 	var wg sync.WaitGroup
-	//loop to check the url status cconitnously
-	for i := range scheduleList {
-		wg.Add(1) //waitgroup to close the function
-		url := fmt.Sprint(scheduleList[i]["url"])
-		name := fmt.Sprint(scheduleList[i]["name"])
-		sampleStr := fmt.Sprint(scheduleList[i]["sample"])
+	//loop to check the url status conitnously
+	if !job.next_run.After(time.Now()) { //Run all the job which passed the next run
+		UpdateNextRun() //update the next run so that next run will be updated and the job will not conituously for which passed the next run.
+		for i := range scheduleList {
+			wg.Add(1) //waitgroup to close the function
+			url := fmt.Sprint(scheduleList[i]["url"])
+			name := fmt.Sprint(scheduleList[i]["name"])
+			sampleStr := fmt.Sprint(scheduleList[i]["sample"])
 
-		sample, err := strconv.Atoi(sampleStr)
-		if err != nil {
-			logger.Log.Error("Error in converting sample to integer", zap.Error(err))
+			sample, err := strconv.Atoi(sampleStr)
+			if err != nil {
+				logger.Log.Error("Error in converting sample to integer", zap.Error(err))
+			}
+			//goroutine created to concurrently execute
+			go func(u string, name string, s int) {
+				defer wg.Done()
+				checkStatus(u, name, sample, ch)
+			}(url, name, sample)
 		}
-		//goroutine created to concurrently execute
-		go func(u string, name string, s int) {
-			defer wg.Done()
-			checkStatus(u, name, sample, ch)
-		}(url, name, sample)
 	}
 	go func() {
 		wg.Wait()
