@@ -10,14 +10,45 @@ import (
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
+var username string
+var password string
 var url string
 var name string
 var cron string
 var sample string
 var email string
 var csvFile string
+var isLoggedIn bool
+
+var loginCmd = &cobra.Command{
+	Use:   "login",
+	Short: "login with username and password",
+	Long:  "to run/execute any command login first",
+	Run: func(cmd *cobra.Command, args []string) {
+		if username == "admin" && password == "admin" {
+			isLoggedIn = true
+			fmt.Println("Logged in succesfully")
+		} else {
+			fmt.Println("Enter valid credential")
+		}
+	},
+}
+
+var createUser = &cobra.Command{
+	Use:   "user",
+	Short: "create user",
+	Run: func(cmd *cobra.Command, args []string) {
+		hashedPwd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			fmt.Println(err)
+		}
+		hashedPwdStr := string(hashedPwd)
+		fmt.Println(username, hashedPwdStr)
+	},
+}
 
 var addCmd = &cobra.Command{
 	Use:   "add",
@@ -105,12 +136,17 @@ var deletecmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(addCmd, deletecmd)
-	addCmd.Flags().StringVarP(&url, "url", "u", "", "url to monitor")
+	rootCmd.AddCommand(addCmd, deletecmd, loginCmd, createUser)
+	addCmd.Flags().StringVarP(&url, "url", "l", "", "url to monitor")
 	addCmd.Flags().StringVarP(&name, "name", "n", "", "name of the url/job.")
 	addCmd.Flags().StringVarP(&cron, "cron", "c", "", "cron definition to check the url")
 	addCmd.Flags().StringVarP(&sample, "sample", "s", "", "number of samples to check")
 	addCmd.Flags().StringVarP(&email, "email", "m", "", "email id to send notification")
 	addCmd.Flags().StringVarP(&csvFile, "file", "g", "", "csv file to add bulk data.")
 	deletecmd.Flags().StringVarP(&name, "name", "n", "", "name of the url to delete.")
+	loginCmd.Flags().StringVarP(&username, "user", "u", "", "user name")
+	loginCmd.Flags().StringVarP(&password, "pwd", "p", "", "password")
+	createUser.Flags().StringVarP(&username, "user", "u", "", "user name")
+	createUser.Flags().StringVarP(&password, "pwd", "p", "", "password")
+
 }

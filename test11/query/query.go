@@ -39,5 +39,6 @@ func SelectQuery() {
 			fmt.Println("Unable to parse the time. ", err)
 		}
 		fmt.Print(schedule.Next(time.Now()))
+		schedule.
 	}
 }
