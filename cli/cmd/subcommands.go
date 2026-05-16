@@ -28,7 +28,17 @@ var loginCmd = &cobra.Command{
 	Short: "login with username and password",
 	Long:  "to run/execute any command login first",
 	Run: func(cmd *cobra.Command, args []string) {
-		if username == "admin" && password == "admin" {
+		db := db.GetDB()
+		userQuery := `SELECT username, password from users where username = $1`
+		row := db.QueryRow(userQuery, username)
+		var user, pwd string
+		err := row.Scan(&user, &pwd)
+		if err != nil {
+			logger.Log.Error("unable to query the user detail", zap.Error(err))
+			return
+		}
+		fmt.Println(user, password)
+		if username == user && password == pwd {
 			isLoggedIn = true
 			fmt.Println("Logged in succesfully")
 		} else {
@@ -41,12 +51,22 @@ var createUser = &cobra.Command{
 	Use:   "user",
 	Short: "create user",
 	Run: func(cmd *cobra.Command, args []string) {
-		hashedPwd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		matched, err := regexp.MatchString(`^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$`, email)
 		if err != nil {
-			fmt.Println(err)
+			logger.Log.Error("Email pattern is not valid", zap.Error(err))
 		}
-		hashedPwdStr := string(hashedPwd)
-		fmt.Println(username, hashedPwdStr)
+		if username != "" && password != "" && matched {
+			hashedPwd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+			if err != nil {
+				fmt.Println(err)
+			}
+			hashedPwdStr := string(hashedPwd)
+			userCreation := db.InsertUser(username, hashedPwdStr, email)
+			fmt.Println(userCreation)
+		} else {
+			fmt.Println("Given details are not valid.")
+		}
+
 	},
 }
 
@@ -145,8 +165,9 @@ func init() {
 	addCmd.Flags().StringVarP(&csvFile, "file", "g", "", "csv file to add bulk data.")
 	deletecmd.Flags().StringVarP(&name, "name", "n", "", "name of the url to delete.")
 	loginCmd.Flags().StringVarP(&username, "user", "u", "", "user name")
-	loginCmd.Flags().StringVarP(&password, "pwd", "p", "", "password")
+	loginCmd.Flags().StringVarP(&password, "password", "p", "", "password")
 	createUser.Flags().StringVarP(&username, "user", "u", "", "user name")
-	createUser.Flags().StringVarP(&password, "pwd", "p", "", "password")
+	createUser.Flags().StringVarP(&password, "password", "p", "", "password")
+	createUser.Flags().StringVarP(&email, "email", "m", "", "email")
 
 }

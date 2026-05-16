@@ -55,3 +55,16 @@ func DeleteRow(name string) {
 	}
 
 }
+
+func InsertUser(username, hashedPwdStr, email string) string {
+	db := GetDB()
+	insertUser := `Insert INTO users(username, password, email) VALUES($1, $2, $3)`
+	_, err := db.Exec(insertUser, username, hashedPwdStr, email)
+	if err != nil {
+		logger.Log.Error("Unable to insert user", zap.Error(err))
+		return "unable to create user"
+	}
+	logger.Log.Info("user inserted sucessfullt", zap.String("user", username))
+	return "User created"
+
+}

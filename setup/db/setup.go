@@ -131,7 +131,7 @@ func createSchema_user(db string) {
 	id SERIAL,
 	username TEXT PRIMARY KEY,
 	password TEXT NOT NULL,
-	email TEXT NOT NULL)`
+	email TEXT)`
 		_, err = dbConn.Exec(query)
 		if err != nil {
 			//fmt.Println("Unable to create user table.", err)
@@ -143,6 +143,13 @@ func createSchema_user(db string) {
 	} else {
 		logger.Log.Info("User Table exists.")
 	}
+	createAdmin := `INSERT INTO users(username, password) VALUES('admin', 'admin' )`
+	_, err = dbConn.Exec(createAdmin)
+	if err != nil {
+		logger.Log.Error("unable to create admin user", zap.Error(err))
+		return
+	}
+	logger.Log.Info("admin user created", zap.String("user", "admin"), zap.String("password", "admin"))
 
 }
 
