@@ -28,25 +28,30 @@ var loginCmd = &cobra.Command{
 	Short: "login with username and password",
 	Long:  "to run/execute any command login first",
 	Run: func(cmd *cobra.Command, args []string) {
-		db := db.GetDB()
-		userQuery := `SELECT username, password from users where username = $1`
-		row := db.QueryRow(userQuery, username)
-		var user, pwd string
-		err := row.Scan(&user, &pwd)
-		if err != nil {
-			logger.Log.Error("unable to query the user detail", zap.Error(err))
-		}
-		if user == "" && pwd == "" {
-			fmt.Println("user is not available in system")
-			return
-		}
-		if username == user && password == pwd {
-			isLoggedIn = true
-			fmt.Println("Logged in succesfully")
-		} else {
-			fmt.Println("Enter valid credential")
-		}
+		ValidUser()
 	},
+}
+
+func ValidUser() {
+	db := db.GetDB()
+	userQuery := `SELECT username, password from users where username = $1`
+	row := db.QueryRow(userQuery, username)
+	var user, pwd string
+	err := row.Scan(&user, &pwd)
+	if err != nil {
+		logger.Log.Error("unable to query the user detail", zap.Error(err))
+	}
+	if user == "" && pwd == "" {
+		fmt.Println("user is not available in system")
+		return
+	}
+	if username == user && password == pwd {
+		isLoggedIn = true
+		fmt.Println("Logged in succesfully")
+	} else {
+		fmt.Println("Enter valid credential")
+	}
+
 }
 
 var createUser = &cobra.Command{
