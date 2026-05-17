@@ -35,9 +35,11 @@ var loginCmd = &cobra.Command{
 		err := row.Scan(&user, &pwd)
 		if err != nil {
 			logger.Log.Error("unable to query the user detail", zap.Error(err))
+		}
+		if user == "" && pwd == "" {
+			fmt.Println("user is not available in system")
 			return
 		}
-		fmt.Println(user, password)
 		if username == user && password == pwd {
 			isLoggedIn = true
 			fmt.Println("Logged in succesfully")
