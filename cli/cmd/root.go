@@ -9,6 +9,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var username string
+var password string
+var email string
+var isLoggedIn bool
+var url string
+var name string
+var cron string
+var sample string
+
+// var email string
+var csvFile string
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "scheduler",
