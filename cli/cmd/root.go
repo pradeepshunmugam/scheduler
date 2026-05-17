@@ -22,8 +22,16 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
-	// PersistentPreRun: func(cmd *cobra.Command, args []string) {
-	// 	ValidUser()
+	// PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+	// 	if cmd.Name() == "login" {
+	// 		return nil
+	// 	}
+
+	// 	if !IsLoggedIn() {
+	// 		return fmt.Errorf("please login first")
+	// 	}
+
+	// 	return nil
 	// },
 }
 
