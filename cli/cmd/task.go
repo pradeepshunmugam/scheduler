@@ -12,14 +12,6 @@ import (
 	"go.uber.org/zap"
 )
 
-var url string
-var name string
-var cron string
-var sample string
-
-// var email string
-var csvFile string
-
 var addCmd = &cobra.Command{
 	Use:   "add",
 	Short: "add the url",

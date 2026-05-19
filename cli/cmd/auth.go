@@ -11,11 +11,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var username string
-var password string
-var email string
-var isLoggedIn bool
-
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "login with username and password",
@@ -38,7 +33,8 @@ func ValidUser() {
 		fmt.Println("user is not available in system")
 		return
 	}
-	if username == user && password == pwd {
+	passwordValid := bcrypt.CompareHashAndPassword([]byte(pwd), []byte(password))
+	if username == user && passwordValid == nil {
 		//isLoggedIn = true
 		fmt.Println("Logged in succesfully")
 	} else {
