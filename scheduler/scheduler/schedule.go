@@ -128,10 +128,19 @@ func checkStatus(url, name string, sample int, ch chan string) {
 	client := http.Client{Timeout: 10 * time.Second}
 	urlStatus, err := client.Get(url)
 	if err != nil {
-		logger.Log.Error("http get error", zap.Error(err))
-		panic("oops something happened !!! Panic")
+		// logger.Log.Error("http get error", zap.Error(err))
+		// sendNotification(name, err.Error()) //adding this on 11-Jun-2026
+		// // panic("oops something happened !!! Panic")
+		// return
+
+		fmt.Println("http get error:", err)
+		sendNotification(name, err.Error())
+		return
 	}
 	res := fmt.Sprintf("Url status of %v is %v .", url, urlStatus.StatusCode)
+	if urlStatus.StatusCode >= 200 {
+		sendNotification(name, res) //adding this on 11-Jun-2026
+	}
 	insert := `INSERT INTO urlstatus(name, status,statuscode) VALUES($1, $2, $3)`
 	_, err = db.Exec(insert, name, urlStatus.Status, urlStatus.StatusCode)
 	if err != nil {

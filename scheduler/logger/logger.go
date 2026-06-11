@@ -48,4 +48,7 @@ func Init() {
 		Log = zap.Must(zap.NewProduction())
 		fmt.Println("Logging to terminal (Container)")
 	}
+	if Log == nil {
+		Log = zap.NewNop() // safe fallback logger
+	}
 }
