@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"scheduler/cli/logger"
 	"time"
 
 	"github.com/joho/godotenv"
-	"go.uber.org/zap"
 )
 
 type AlertRequest struct {
@@ -21,9 +19,11 @@ type AlertRequest struct {
 }
 
 func sendNotification(name, res string) {
+
 	err := godotenv.Load()
 	if err != nil {
-		logger.Log.Error("Unable to load env file", zap.Error(err))
+		// logger.Log.Error("Unable to load env file", zap.Error(err))
+		fmt.Println(err)
 	}
 	baseURL := os.Getenv("BASE_URL")
 	payload := AlertRequest{
