@@ -10,15 +10,14 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var Log *zap.Logger
+var Log *zap.Logger = zap.NewNop()
 
 func Init() {
 	err := godotenv.Load("../.env")
-	logPath := os.Getenv("LOG_PATH")
-
 	if err != nil {
 		fmt.Println("Unable to load env", err)
 	}
+	logPath := os.Getenv("LOG_PATH")
 	deployeType := os.Getenv("DEPLOYED_TYPE")
 	if logPath == "" {
 		logPath = "./log/app.log"
@@ -48,7 +47,7 @@ func Init() {
 		Log = zap.Must(zap.NewProduction())
 		fmt.Println("Logging to terminal (Container)")
 	}
-	if Log == nil {
-		Log = zap.NewNop() // safe fallback logger
-	}
+	// if Log == nil {
+	// 	Log = zap.NewNop() // safe fallback logger
+	// }
 }

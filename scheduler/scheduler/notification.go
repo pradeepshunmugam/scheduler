@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"scheduler/scheduler/logger"
 	"time"
 
 	"github.com/joho/godotenv"
+	"go.uber.org/zap"
 )
 
 type AlertRequest struct {
@@ -22,8 +25,7 @@ func sendNotification(name, res string) {
 
 	err := godotenv.Load()
 	if err != nil {
-		// logger.Log.Error("Unable to load env file", zap.Error(err))
-		fmt.Println(err)
+		logger.Log.Error("Unable to load env file", zap.Error(err))
 	}
 	baseURL := os.Getenv("BASE_URL")
 	payload := AlertRequest{
@@ -34,26 +36,24 @@ func sendNotification(name, res string) {
 	}
 	body, err := json.Marshal(payload)
 	if err != nil {
-		// logger.Log.Error("Error in marshaling", zap.Error(err))
-		fmt.Println(err)
+		logger.Log.Error("Error in marshaling", zap.Error(err))
+
 	}
 	req, err := http.NewRequest("POST", baseURL, bytes.NewBuffer(body))
 	if err != nil {
-		fmt.Println(err)
+		logger.Log.Error("Error in sending request to go alert", zap.Error(err))
+
 	}
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		// logger.Log.Error("Error in marshaling", zap.Error(err))
-		fmt.Println(err)
+		logger.Log.Error("Error in marshaling", zap.Error(err))
 	}
 	defer resp.Body.Close()
-	// bodyBytes, err := io.ReadAll(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		// logger.Log.Error("Error in marshaling", zap.Error(err))
-		fmt.Println(err)
+		logger.Log.Error("Error in marshaling", zap.Error(err))
 	}
-	// logger.Log.Info("Status of sending event to destination", zap.String("status", resp.Status), zap.Int("statusCode", resp.StatusCode), zap.String("statusBody", string(bodyBytes)))
-	fmt.Println("notification send")
+	logger.Log.Info("Status of sending event to destination", zap.String("status", resp.Status), zap.Int("statusCode", resp.StatusCode), zap.String("statusBody", string(bodyBytes)))
 }
