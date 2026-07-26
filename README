@@ -1,0 +1,44 @@
+# Distributed Job Scheduler
+
+A CLI-based scheduler tool to initiate HTTP health-check jobs and (in progress) remote script execution — built to replace a proprietary scheduler tool.
+
+## What This Is
+
+Many teams rely on manual or proprietary tools to run scheduled health checks and scripts, which often come with licensing costs and limited flexibility. This project is a lightweight, open-source scheduler that lets users define HTTP jobs and (soon) remote script execution jobs, reducing manual operational effort.
+
+## Tech Stack
+
+- **Go** — core application logic
+- **Cobra** — CLI framework
+- **gRPC** — for remote job execution (in progress)
+- **PostgreSQL** — job storage (URLs, cron schedules, notification settings)
+
+## Key Features
+
+- Add jobs via CLI, specifying the URL to monitor, a cron schedule, and an email address for failure notifications
+- Job configuration is persisted in PostgreSQL and executed automatically at the scheduled time
+- Failure notifications sent via email when a job's HTTP check fails
+- **In progress:** remote script execution on other servers via gRPC
+
+## Challenges & What I Learned
+
+I started this project with no prior Go experience, using it as an opportunity to learn the language hands-on. It grew out of a real problem I'd seen at work — replacing a proprietary Windows Task Scheduler setup that had real limitations around flexibility and visibility into failures.
+
+Building this taught me:
+- How to structure a CLI application using the Cobra framework
+- How to implement scheduled/cron-based job execution in Go
+- How to send failure notifications over HTTP
+- I'm currently learning gRPC in order to extend the scheduler to execute jobs on remote servers — this is the active area of development
+
+## How to Run It
+
+⚠️ Not yet packaged as a compiled binary. To run it locally:
+
+- Clone the project and setup the tool , add the http jobs from cli and run the scheduler.
+
+ https://github.com/pradeepshunmugam/scheduler.git
+
+
+## Status
+
+🚧 Actively in development — HTTP job scheduling is functional; remote job execution via gRPC is in progress.
